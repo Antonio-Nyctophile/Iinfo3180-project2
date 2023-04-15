@@ -7,6 +7,8 @@ This file creates your application.
 
 from app import app
 from flask import render_template, request, jsonify, send_file
+from . import db
+from app.models import Post,Like,Follow,User
 import os
 
 
