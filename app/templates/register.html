@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div class="photo-container">
+    <p class="photo-title">Register</p>
+    {% include 'flashes.html' %}
+    <div class="photo-card photo-card-solid">
+        <form method="post">
+            {{ form.csrf_token }}
+
+            <div class="form-group">
+                {{ form.username.label() }}
+                {{ form.username(class='form-control') }}
+            </div>
+            <div class="form-group">
+                {{ form.password.label() }}
+                {{ form.password(class='form-control') }}
+            </div>
+            <div class="form-group">
+                {{ form.first_name.label() }}
+                {{ form.first_name(class='form-control') }}
+            </div>
+            <div class="form-group">
+                {{ form.last_name.label() }}
+                {{ form.last_name(class='form-control') }}
+            </div>
+            <div class="form-group">
+                {{ form.email.label() }}
+                {{ form.email(class='form-control') }}
+            </div>
+            <div class="form-group">
+                {{ form.location.label() }}
+                {{ form.location(class='form-control') }}
+            </div>
+            <div class="form-group">
+                {{ form.bio.label() }}
+                {{ form.bio(class='form-control') }}
+            </div>
+            <div class="form-group">
+                {{ form.photo.label() }}
+                {{ form.photo(class='form-control') }}
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-register">Register</button>
+
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

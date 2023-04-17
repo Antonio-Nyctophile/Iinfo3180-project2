@@ -4,12 +4,14 @@ Jinja2 Documentation:    https://jinja.palletsprojects.com/
 Werkzeug Documentation:  https://werkzeug.palletsprojects.com/
 This file creates your application.
 """
-
 from app import app
-from flask import render_template, request, jsonify, send_file
+from flask import render_template, request, jsonify, send_file, redirect, url_for, flash
+from app.forms import RegistrationForm, LoginForm, NewPostForm
+from werkzeug.utils import secure_filename
 from . import db
 from app.models import Post,Like,Follow,User
 import os
+from .config import Config
 
 
 ###
@@ -17,10 +19,68 @@ import os
 ###
 
 @app.route('/')
-def index():
-    return jsonify(message="This is the beginning of our API")
+def home():
+    """Render Photogram's home page."""
+    return render_template('home.html')
 
+@app.route('/explore', methods=['POST', 'GET'])
+def explore():
+    """Render Photogram's explore page."""
+    return render_template('explore.html')
 
+@app.route('/profile')
+def profile():
+    """Render Photogram's profile page."""
+    return render_template('profile.html')
+
+@app.route('/posts/new')
+def post():
+    """Render Photogram's new post page."""
+    form = NewPostForm()
+    if form.validate_on_submit():
+        photo_file = form.data.photo
+        photo_filename = secure_filename(photo_file.filename)
+        photo_file.save(os.path.join(Config.UPLOAD_FOLDER, photo_filename))
+        caption = form.data.caption
+        return redirect(url_for('profile'))
+    return render_template('post.html', form=form)
+
+@app.route('/register', methods=['POST', 'GET'])
+def register():
+    """Render Photogram's registration page."""
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        username = form.data.username
+        password = form.data.password
+        first_name = form.data.first_name
+        last_name = form.data.last_name
+        email = form.data.email
+        location = form.data.location
+        bio = form.data.bio
+        photo_file = form.data.photo
+        photo_filename = secure_filename(photo_file.filename)
+        photo_file.save(os.path.join(Config.UPLOAD_FOLDER, photo_filename))
+        return redirect(url_for('home'))
+    return render_template('register.html', form=form)
+
+@app.route('/login', methods=['POST', 'GET'])
+def login():
+    """Render Photogram's sign in page."""
+    form = LoginForm()
+    if form.validate_on_submit():
+        username = form.data.username
+        password = form.data.password
+        return redirect(url_for('explore'))
+    return render_template('login.html', form=form)
+
+@app.route('/logout')
+def logout():
+    """Logout user."""
+    return render_template('logout.html')
+
+@app.route('/users/<userid>')
+def display_profile(userid):
+    pass
 ###
 # The functions below should be applicable to all Flask apps.
 ###

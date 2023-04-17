@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div class="photo-container photo-container-post">
+    <p class="photo-title">New Post</p>
+    {% include 'flashes.html' %}
+    <div class="photo-card photo-card-solid">
+        <form method="post">
+            {{ form.csrf_token }}
+            <div class="form-group">
+                {{ form.photo.label() }}
+                {{ form.photo(class='form-control') }}
+            </div>
+            <div class="form-group">
+                {{ form.caption.label() }}
+                {{ form.caption(class='form-control') }}
+            </div>
+           
+            <div class="form-group">
+                <button type="submit" class="btn btn-register">Submit</button>
+            </div> 
+        </form>
+    </div>
+</div>
+{% endblock %}

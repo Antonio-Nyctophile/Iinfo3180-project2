@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div class="cards">
+    <div class="photo-card photo-card-home">
+        <img src="{{ url_for('static', filename='images/main-img.jpg')}}" alt="" class="home-img">
+    </div>
+    <div class="photo-card photo-card-text photo-card-home">
+        <div class="logo"><p><span><i class="fa-solid fa-camera-retro"></i></span>Photogram</p></div>
+        <hr>
+        <div class="photo-card-content">
+            <p>Share photos of your favourite moments with friends, family and the world.</p>
+            <div class="photo-card-btns">
+                <button class="btn btn-register"><a href="{{ url_for('register') }}">Register</a></button>
+                <button class="btn btn-login"><a href="{{ url_for('login') }}">Login</a></button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
