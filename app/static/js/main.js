@@ -10,6 +10,5 @@ window.onload = () => {
             followBtn.classList.add('btn-register')
             followBtn.textContent = 'Following'
         }
-        console.log('click')
     })
 }
