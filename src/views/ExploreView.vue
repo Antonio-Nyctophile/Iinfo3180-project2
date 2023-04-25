@@ -1,14 +1,12 @@
-{% extends "base.html" %}
-
-{% block main %}
-<div class="explore-page">
+<template>
+    <div class="explore-page">
     <div class="explore-container">
         <div class="photo-card explore-card">
             <div class="explore-header">
                 <span><i class="fa-solid fa-user-astronaut"></i></span>
                 <p class="explore-username">jperalta</p>
             </div>
-            <img src="{{ url_for('static', filename='images/explore-img-1.jpg') }}" alt="">
+            <img src="@/assets/images/explore-img-1.jpg" alt="">
             <div class="explore-footer">
                 <p class="explore-desc">Lorem ipsum dolor sit amet consectetur adipisicing elit. Quasi praesentium non repudiandae, qui asperiores quisquam eum id officia laboriosam? Maxime vitae ea dignissimos voluptas rerum quisquam eum quo ratione? Rerum nostrum nihil ab sed ducimus sit a sint, repellendus, velit, quia deleniti quae iusto error nam? Aperiam obcaecati optio cum!</p>
                 <div class="explore-stats">
@@ -26,7 +24,7 @@
                 <span><i class="fa-solid fa-user-astronaut"></i></span>
                 <p class="explore-username">jperalta</p>
             </div>
-            <img src="{{ url_for('static', filename='images/explore-img-1.jpg') }}" alt="">
+            <img src="@/assets/images/explore-img-1.jpg" alt="">
             <div class="explore-footer">
                 <p class="explore-desc">Lorem ipsum dolor sit amet consectetur adipisicing elit. Quasi praesentium non repudiandae, qui asperiores quisquam eum id officia laboriosam? Maxime vitae ea dignissimos voluptas rerum quisquam eum quo ratione? Rerum nostrum nihil ab sed ducimus sit a sint, repellendus, velit, quia deleniti quae iusto error nam? Aperiam obcaecati optio cum!</p>
                 <div class="explore-stats">
@@ -40,7 +38,6 @@
         </div>
     </div>
 
-    <button class="btn btn-login explore-btn"><a href="{{ url_for('post') }}">New Post</a></button>
+    <button class="btn btn-login explore-btn"><RouterLink to="/post">New Post</RouterLink></button>
 </div>
-
-{% endblock %}
+</template>

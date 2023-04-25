@@ -6,14 +6,20 @@ let message = ref("Hello World! This is a VueJS and Flask Starter Template.")
 </script>
 
 <template>
-    <div class="container">
-      <div class="text-center">
-        <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-        <h1>{{ message }}</h1>
+  <div class="cards">
+      <div class="photo-card photo-card-home">
+          <img src="@/assets/images/main-img.jpg" alt="" class="home-img">
       </div>
-    </div>
+      <div class="photo-card photo-card-text photo-card-home">
+          <div class="logo"><p><span><i class="fa-solid fa-camera-retro"></i></span>Photogram</p></div>
+          <hr>
+          <div class="photo-card-content">
+              <p>Share photos of your favourite moments with friends, family and the world.</p>
+              <div class="photo-card-btns">
+                  <button class="btn btn-register"><RouterLink to="/register">Register</RouterLink></button>
+                  <button class="btn btn-login"><RouterLink to="/login">Login</RouterLink></button>
+              </div>
+          </div>
+      </div>
+  </div>
 </template>
-
-<style>
-/* Add any component specific styles here */
-</style>
