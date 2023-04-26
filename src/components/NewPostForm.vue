@@ -1,11 +1,16 @@
 <script setup>
     import { ref, onMounted } from "vue";
+    import router from "../router/index";
 
     onMounted(() => {
         getCsrfToken();
+        getUserId();
+        getJWTToken();
     });
 
     let csrf_token = ref("");
+    let current_user_id = ref("");
+    let jwt_token = ref("");
 
     function getCsrfToken(){
         fetch('/api/v1/csrf-token')
@@ -14,19 +19,36 @@
                 csrf_token.value = data.csrf_token;
             })
     }
+    let getUserId = () => {
+        fetch('/api/v1/current-user')
+        .then((response) => response.json())
+        .then((data) => {
+            current_user_id.value = data.current_user;
+        })
+    }
+    let getJWTToken = () => {
+        fetch('/api/v1/jwt-token')
+        .then((response) => response.json())
+        .then((data) => {
+            jwt_token.value = data.jwt_token;
+        })
+    }
+
     let makePost = () => {
         let postForm = document.querySelector('#postForm');
         let form_data = new FormData(postForm);
-        fetch("/api/v1/auth/login", {
+        fetch(`/api/v1/users/${current_user_id.value}/posts`, {
             method: 'POST',
             body: form_data,
             headers: {
-                'X-CSRFToken': csrf_token.value
+                'X-CSRFToken': csrf_token.value,
+                Authorization: 'Bearer ' + jwt_token.value,
             }
         }).then(function (response) {
             return response.json();
         }).then(function (data) {
         // display a success message
+            router.push('/explore');
             console.log(data);
         }).catch(function (error) {
             console.log(error);

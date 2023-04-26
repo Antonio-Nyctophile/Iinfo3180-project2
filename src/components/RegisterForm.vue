@@ -1,5 +1,6 @@
 <script setup>
     import { ref, onMounted } from "vue";
+    import router from "../router/index";
 
     onMounted(() => {
         getCsrfToken();
@@ -14,20 +15,23 @@
                 csrf_token.value = data.csrf_token;
             })
     }
+    
     let saveUser = () => {
         let registerForm = document.querySelector('#registerForm');
         let form_data = new FormData(registerForm);
-        fetch("api/v1/register", {
+
+        fetch('/api/v1/register', {
             method: 'POST',
             body: form_data,
             headers: {
-                'X-CSRFToken': csrf_token.value
+                'X-CSRFToken': csrf_token.value,
             }
         }).then(function (response) {
             console.log(response)
             return response.json();
         }).then(function (data) {
         // display a success message
+            router.push('/explore');
             console.log(data);
         }).catch(function (error) {
             console.log(error);

@@ -7,7 +7,7 @@ This file creates your application.
 import jwt
 from functools import wraps
 from app import app, db, login_manager
-from flask import render_template, request, jsonify, send_file, redirect, url_for, flash,g,send_from_directory
+from flask import render_template, request, jsonify, send_file, redirect, url_for, flash,g,send_from_directory, session
 from app.forms import RegistrationForm, LoginForm, NewPostForm
 from werkzeug.utils import secure_filename
 from . import db
@@ -61,24 +61,24 @@ def index():
     return jsonify(message="This is the beginning of our API")
 
 # USER REGISTRATION 
-@app.route('/api/v1/register', methods=['POST'])
+@app.route('/api/v1/register', methods=['GET','POST'])
 def register():
     """Register a user"""
     form = RegistrationForm()
     if form.validate_on_submit():
-        username = form.data.username
-        password = form.data.password
-        first_name = form.data.first_name
-        last_name = form.data.last_name
-        email = form.data.email
-        location = form.data.location
-        bio = form.data.bio
-        photo_file = form.data.photo
+        username = form.username.data
+        password = form.password.data
+        first_name = form.first_name.data
+        last_name = form.last_name.data
+        email = form.email.data
+        location = form.location.data
+        bio = form.bio.data
+        photo_file = form.photo.data
         joined_on = datetime.utcnow()
         photo_filename = secure_filename(photo_file.filename)
-        photo_file.save(os.path.join(app.config.UPLOAD_FOLDER, photo_filename))
+        photo_file.save(os.path.join(Config.UPLOAD_FOLDER, photo_filename))
 
-        user = User(username,password,first_name,last_name,email,location,bio,photo_file,joined_on)
+        user = User(username,password,first_name,last_name,email,location,bio,photo_filename,joined_on)
         db.session.add(user)
         db.session.commit()
         return jsonify({
@@ -102,26 +102,30 @@ def login():
     """Login an existing User"""
     form = LoginForm()
     if form.validate_on_submit():
-        username = form.data.username
-        password = form.data.password
+        username = form.username.data
+        password = form.password.data
         user = db.session.execute(db.select(User).filter_by(username=username)).scalar()
         if user is not None and check_password_hash(user.password, password):
             login_user(user)
             jwt_token = generate_token(user.id)
+
+            session['jwt_token'] = jwt_token
+
             return jsonify({
                 "message": "User successfully logged in.",
-                "token": jwt_token
+                "token": jwt_token,
             }), 200
         return jsonify(errors=["Invalid username or password"])
     errors = form_errors(form)
     return jsonify(errors=errors), 400
     
 # User Logout
-@app.route('/api/v1/auth/logout', methods=['POST'])
+@app.route('/api/v1/auth/logout', methods=['GET'])
 @login_required
 def logout():
     """Logout an existing user"""
     logout_user()
+    session.pop('jwt_token', None)
     return jsonify({
         "message": "User successfully logged out."
     }), 200
@@ -185,7 +189,7 @@ def add_post(user_id):
         photo = postForm.photo.data
         caption = postForm.caption.data
         photo_filename = secure_filename(photo.filename)
-        photo.save(os.path.join(app.config['UPLOAD_FOLDER'], photo_filename))
+        photo.save(os.path.join(Config.UPLOAD_FOLDER, photo_filename))
         created_on = datetime.utcnow()
         post = Post(caption,photo_filename,user_id,created_on)
         db.session.add(post)
@@ -324,3 +328,15 @@ def load_user(user_id):
 @app.route('/api/v1/csrf-token', methods=['GET'])
 def get_csrf():
     return jsonify({'csrf_token': generate_csrf()})
+
+@app.route('/api/v1/current-user', methods=['GET'])
+def get_current_user():
+    return jsonify({'current_user':current_user.id})
+
+@app.route('/api/v1/jwt-token', methods=['GET'])
+def get_jwt_token():
+    return jsonify(jwt_token=session.get('jwt_token'))
+
+@app.route('/api/v1/authenticated', methods=['GET'])
+def authenticated():
+    return jsonify(logged_in=current_user.is_authenticated)

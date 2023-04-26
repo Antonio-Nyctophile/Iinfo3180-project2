@@ -1,5 +1,6 @@
 # Add any model classes for Flask-SQLAlchemy here
 from . import db 
+from werkzeug.security import generate_password_hash
 
 
 class Post(db.Model):
@@ -16,6 +17,9 @@ class Post(db.Model):
         self.photo=photo
         self.user_id=user_id
         self.created_on=created_on
+
+    def __repr__(self):
+        return '<Post %r>' % (self.id)
 
 
 class Like(db.Model):
@@ -40,11 +44,12 @@ class Follow(db.Model):
         self.follower_id = follower_id
         self.user_id = user_id
 
+
 class User(db.Model):
     __tablename__ = 'Users'
 
     id=db.Column(db.Integer, primary_key=True)
-    username=db.Column(db.String(255))
+    username=db.Column(db.String(255), unique=True)
     password=db.Column(db.String(255))
     firstname=db.Column(db.String(255))
     lastname=db.Column(db.String(255))
@@ -56,7 +61,7 @@ class User(db.Model):
 
     def __init__(self,username,password,firstname,lastname,email,location,biography,profile,joined_on):
         self.username = username
-        self.password = password
+        self.password = generate_password_hash(password, method='pbkdf2:sha256')
         self.firstname = firstname
         self.lastname = lastname
         self.email = email
@@ -65,6 +70,23 @@ class User(db.Model):
         self.profile = profile
         self.joined_on = joined_on
 
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        try:
+            return unicode(self.id)  # python 2 support
+        except NameError:
+            return str(self.id)  # python 3 support
+
+    def __repr__(self):
+        return '<User %r>' % (self.username)
 
 
     

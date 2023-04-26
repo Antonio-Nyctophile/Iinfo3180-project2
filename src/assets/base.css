@@ -444,3 +444,7 @@ main{
     -ms-transform: translateX(20px);
     -o-transform: translateX(20px);
 }
+
+#header-login-btn{
+    display: none;
+}

@@ -1,5 +1,6 @@
 <script setup>
     import { ref, onMounted } from "vue";
+    import router from "../router/index";
 
     onMounted(() => {
         getCsrfToken();
@@ -28,6 +29,7 @@
             return response.json();
         }).then(function (data) {
         // display a success message
+            router.push('/explore');
             console.log(data);
         }).catch(function (error) {
             console.log(error);
