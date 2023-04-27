@@ -20,10 +20,10 @@
             })
     }
     let getUserId = () => {
-        fetch('/api/v1/current-user')
+        fetch('/api/v1/authenticated')
         .then((response) => response.json())
         .then((data) => {
-            current_user_id.value = data.current_user;
+            current_user_id.value = data.current_user_id;
         })
     }
     let getJWTToken = () => {

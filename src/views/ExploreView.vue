@@ -91,6 +91,6 @@
 
     </div>
 
-    <button class="btn btn-login explore-btn"><RouterLink to="/post">New Post</RouterLink></button>
+    <button class="btn btn-login explore-btn"><RouterLink to="/posts/new">New Post</RouterLink></button>
 </div>
 </template>

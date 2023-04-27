@@ -8,8 +8,8 @@
 
     onMounted(() => {
         getCsrfToken();
-        getUserId();
         getJWTToken();
+        getUserId();
 
         const followBtn = document.querySelector("#follow-btn");
         const alert = document.querySelector("#alert");
