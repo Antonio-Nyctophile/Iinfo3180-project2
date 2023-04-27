@@ -61,7 +61,7 @@ def index():
     return jsonify(message="This is the beginning of our API")
 
 # USER REGISTRATION 
-@app.route('/api/v1/register', methods=['GET','POST'])
+@app.route('/api/v1/register', methods=['POST'])
 def register():
     """Register a user"""
     form = RegistrationForm()
@@ -90,7 +90,7 @@ def register():
             "email": email,
             "location": location,
             "biography": bio,
-            "profile_photo":  photo_filename,
+            "profile_photo": photo_filename,
             "joined_on": joined_on
         }), 201
     errors = form_errors(form)
@@ -120,8 +120,8 @@ def login():
     return jsonify(errors=errors), 400
     
 # User Logout
-@app.route('/api/v1/auth/logout', methods=['GET'])
-@login_required
+@app.route('/api/v1/auth/logout', methods=['POST'])
+# @login_required
 def logout():
     """Logout an existing user"""
     logout_user()
@@ -138,12 +138,13 @@ def get_user_details(user_id):
     """Returns details of the user"""
     user_details = db.session.execute(db.select(User).filter_by(id=int(user_id))).scalar()
     user_posts = db.session.execute(db.select(Post).filter_by(user_id=int(user_id))).scalars()
+    user_followers = db.session.execute(db.select(Follow).filter_by(user_id=int(user_id))).scalars()
     posts = []
     for post in user_posts:
         posts.append({
             "id": post.id,
             "user_id": post.user_id,
-            "photo": post.photo,
+            "photo": f"/api/v1/uploads/{post.photo}",
             "description": post.caption,
             "created_on": post.created_on,
         })
@@ -155,15 +156,16 @@ def get_user_details(user_id):
         "email": user_details.email,
         "location": user_details.location,
         "biography": user_details.biography,
-        "profile_photo": user_details.profile_photo,
+        "profile_photo": f"/api/v1/uploads/{user_details.profile_photo}",
         "joined_on": user_details.joined_on,
-        "posts": posts
+        "posts": posts,
+        "followers": len([follower for follower in user_followers])
     }), 200
 #------------------------------ POSTS ----------------------------------------------#
 #View User Posts
 @app.route('/api/v1/users/<user_id>/posts', methods=['GET'])
 @login_required
-@requires_auth
+# @requires_auth
 def get_posts(user_id):
     """Get a list of all posts by a specific user."""
     user_posts = db.session.execute(db.select(Post).filter_by(user_id=user_id)).scalars()
@@ -172,7 +174,7 @@ def get_posts(user_id):
         posts.append({
             "id": post.id,
             "user_id": post.user_id,
-            "photo": post.photo,
+            "photo": f"/api/v1/posters/{post.photo}",
             "description": post.caption,
             "created_on": post.created_on,
         })
@@ -210,12 +212,20 @@ def add_post(user_id):
 def follow(user_id):
     """Follow the user whos profile you are viewing."""
     #NOTE User ID is the person being followed 
-    follow = Follow(user_id=user_id, follower_id=int(current_user.get_id()))
-    db.session.add(follow)
-    db.session.commit()
+    follower_id = int(current_user.get_id())
+    user_id = int(user_id)
+    if user_id != follower_id:
+        follow = Follow(user_id=user_id, follower_id=follower_id)
+        db.session.add(follow)
+        db.session.commit()
+        return jsonify({
+            "message": "Successfully followed user.",
+            "follwer": follower_id,
+            "followed": user_id
+        }), 201
     return jsonify({
-        "message": "You are now following that user."
-    }), 201
+        "message": "You can't follow yourself!"
+    }), 400
 
 #TODO Get number of followers
 @app.route('/api/v1/users/<user_id>/follow', methods=['GET'])
@@ -232,20 +242,22 @@ def get_num_followers(user_id):
 #View all Posts by all Users 
 @app.route('/api/v1/posts', methods=['GET'])
 @login_required
-@requires_auth
 def get_all_posts():
     """View all posts by all registered users in the system."""
     posts = db.session.execute(db.select(Post)).scalars()
+
     all_posts = []
     for post in posts:
-        likes = db.session.execute(db.select(Like).filter_by(id=post.id)).scalars()
+        likes = db.session.execute(db.select(Like).filter_by(post_id=post.id)).scalars()
+        user = User.query.get(post.user_id)
         all_posts.append({
             "id": post.id,
             "user_id": post.user_id,
-            "photo": post.photo,
+            "photo": f"/api/v1/uploads/{post.photo}",
             "caption": post.caption,
             "created_on": post.created_on,
-            "likes": len([like for like in likes])
+            "likes": len([like for like in likes]),
+            "username": user.username
         })
     return jsonify(all_posts), 200
 #---------------------------------------Like Posts----------------------------------#
@@ -329,9 +341,9 @@ def load_user(user_id):
 def get_csrf():
     return jsonify({'csrf_token': generate_csrf()})
 
-@app.route('/api/v1/current-user', methods=['GET'])
-def get_current_user():
-    return jsonify({'current_user':current_user.id})
+# @app.route('/api/v1/current-user', methods=['GET'])
+# def get_current_user():
+#     return jsonify({'current_user':current_user.id})
 
 @app.route('/api/v1/jwt-token', methods=['GET'])
 def get_jwt_token():
@@ -339,4 +351,11 @@ def get_jwt_token():
 
 @app.route('/api/v1/authenticated', methods=['GET'])
 def authenticated():
-    return jsonify(logged_in=current_user.is_authenticated)
+    if current_user.is_authenticated:
+        return jsonify(logged_in=True, id=current_user.id)
+    else:
+        return jsonify(logged_in=False)
+
+@app.route('/api/v1/uploads/<filename>', methods=['GET'])
+def get_image(filename):
+    return send_from_directory(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER']), filename)

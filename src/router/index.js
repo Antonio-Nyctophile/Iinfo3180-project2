@@ -12,7 +12,8 @@ const router = createRouter({
     {
       path: '/explore',
       name: 'explore',
-      component: () => import('../views/ExploreView.vue')
+      component: () => import('../views/ExploreView.vue'),
+      requiresAuth: true
     },
     {
       path: '/register',
@@ -25,9 +26,10 @@ const router = createRouter({
       component: () => import('../views/LoginView.vue')
     },
     {
-      path: '/profile',
-      name: 'profile',
-      component: () => import('../views/ProfileView.vue')
+      path: '/users/:id',
+      name: 'users',
+      component: () => import('../views/ProfileView.vue'),
+      params: true,
     },
     {
       path: '/post',
@@ -40,6 +42,28 @@ const router = createRouter({
       component: () => import('../views/PageNotFoundView.vue')
     }
   ]
+})
+
+const protectedRoutes = [
+  "explore",
+  "users",
+  "post",
+]
+router.beforeEach( async (to, from, next) => {
+  const isLoggedIn = async () => {
+    const response = await fetch('/api/v1/authenticated')
+    return response.json()
+  }
+
+  let loggedInStatus = await isLoggedIn();
+
+  const isProtected = protectedRoutes.includes(to.name)
+  if(isProtected && !loggedInStatus.logged_in){
+      next({
+          path: '/login',
+          query: { redirect: to.fullPath }
+      })
+  }else next()
 })
 
 export default router

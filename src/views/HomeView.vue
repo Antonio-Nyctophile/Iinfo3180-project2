@@ -1,11 +1,12 @@
 <script setup>
 import { ref } from "vue";
 
-let message = ref("Hello World! This is a VueJS and Flask Starter Template.")
+
 
 </script>
 
 <template>
+<div class="alert" id="alert"></div>
   <div class="cards">
       <div class="photo-card photo-card-home">
           <img src="@/assets/images/main-img.jpg" alt="" class="home-img">

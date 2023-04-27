@@ -148,13 +148,15 @@ form input, form textarea{
     font-size: 14px;
     padding: 10px;
     margin-bottom: 10px;
+    padding-left:20px ;
     color: var(--clr-light);
-    background-color: #22b276;
-    border-radius: 5px;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    -ms-border-radius: 5px;
-    -o-border-radius: 5px;
+    background-color: #c68141;
+    border-radius: 0 0 5px 5px;
+    -webkit-border-radius: 0 0 5px 5px;
+    -moz-border-radius: 0 0 5px 5px;
+    -ms-border-radius: 0 0 5px 5px;
+    -o-border-radius: 0 0 5px 5px;
+    display: none;
 }
 /*----------------------------------------HEADER STYLING-----------------------------------------------------------*/                                                                                                       
 
@@ -445,6 +447,15 @@ main{
     -o-transform: translateX(20px);
 }
 
-#header-login-btn{
-    display: none;
+.like-post{
+    transition: all 0.2s ease-in;
+    -webkit-transition: all 0.2s ease-in;
+    -moz-transition: all 0.2s ease-in;
+    -ms-transition: all 0.2s ease-in;
+    -o-transition: all 0.2s ease-in;
+}
+
+.like-post-btn:hover{
+    color: #d22020;
+    cursor: pointer;
 }

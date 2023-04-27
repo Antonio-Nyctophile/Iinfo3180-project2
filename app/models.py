@@ -33,6 +33,9 @@ class Like(db.Model):
         self.post_id=post_id
         self.user_id=user_id
 
+    def __repr__(self):
+        return '<Like %r>' % (self.id)
+
 class Follow(db.Model):
     __tablename__ = 'Follows'
 
@@ -43,6 +46,9 @@ class Follow(db.Model):
     def __init__(self,follower_id,user_id):
         self.follower_id = follower_id
         self.user_id = user_id
+
+    def __repr__(self):
+        return '<Follow %r>' % (self.id)
 
 
 class User(db.Model):
@@ -56,10 +62,10 @@ class User(db.Model):
     email=db.Column(db.String(255))
     location=db.Column(db.String(255))
     biography=db.Column(db.String(255))
-    profile=db.Column(db.String(255))
+    profile_photo=db.Column(db.String(255))
     joined_on=db.Column(db.DateTime())
 
-    def __init__(self,username,password,firstname,lastname,email,location,biography,profile,joined_on):
+    def __init__(self,username,password,firstname,lastname,email,location,biography,profile_photo,joined_on):
         self.username = username
         self.password = generate_password_hash(password, method='pbkdf2:sha256')
         self.firstname = firstname
@@ -67,7 +73,7 @@ class User(db.Model):
         self.email = email
         self.location = location
         self.biography = biography
-        self.profile = profile
+        self.profile_photo = profile_photo
         self.joined_on = joined_on
 
     def is_authenticated(self):

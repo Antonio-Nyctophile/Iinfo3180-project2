@@ -8,15 +8,18 @@
 
     let csrf_token = ref("");
 
+
+
     function getCsrfToken(){
         fetch('/api/v1/csrf-token')
             .then((response) => response.json())
             .then((data) => {
                 csrf_token.value = data.csrf_token;
-                console.log(data)
             })
     }
     let loginUser = () => {
+        const alert = document.querySelector("#alert");
+
         let loginForm = document.querySelector('#loginForm');
         let form_data = new FormData(loginForm);
         fetch("/api/v1/auth/login", {
@@ -31,13 +34,15 @@
         // display a success message
             router.push('/explore');
             console.log(data);
+            alert.style.display = 'block'
+            alert.textContent = data.errors[0]
         }).catch(function (error) {
-            console.log(error);
         });
     }
 </script>
 
 <template>
+    <div class="alert" id="alert"></div>
     <form @submit.prevent="loginUser" enctype="multipart/form-data" id="loginForm">
             <div class="form-group">
                 <label for="username">Username</label>
