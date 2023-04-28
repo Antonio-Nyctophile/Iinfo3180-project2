@@ -30,7 +30,21 @@
         let jwt = await getJWTToken();
         jwt_token.value = jwt.jwt_token;
 
-        loadProfileHeader()
+        let info = await getHeaderInfo();
+        for(let key in info){
+            current_user_info.value[key] = info[key]
+        }
+
+        for(let follower of current_user_info.value['followers']){
+            if(follower.follower_id == current_user_id.value){
+                following_flag.value = true;
+            } else {
+                following_flag.value = false;
+            }
+        }
+
+        num_posts.value = current_user_info.value['posts'].length;
+        num_followers.value = current_user_info.value['followers'].length;
 
         dataLoaded.value = true;
     })
@@ -68,37 +82,15 @@
         })
     })
 
-    let loadProfileHeader = () => {
-        fetch(`/api/v1/users/${profile_id.value}`, {
+    let getHeaderInfo = async () => {
+        const response = await fetch(`/api/v1/users/${profile_id.value}`, {
             method: 'GET',
             headers: {
                 'X-CSRFToken': csrf_token.value,
                 Authorization: 'Bearer ' + jwt_token.value,
             }
-        }).then((response) => {
-            return response.json();
-        }).then((data) => {
-            for(let key in data){
-                current_user_info.value[key] = data[key]
-            }
-
-            for(let follower of current_user_info.value['followers']){
-                console.log(follower.follower_id)
-                console.log(current_user_id.value, 'd')
-                if(follower.follower_id === current_user_id.value){
-                    console.log('dd')
-                    following_flag.value = true;
-                } else {
-                    following_flag.value = false;
-                }
-            }
-
-            num_posts.value = current_user_info.value['posts'].length;
-            num_followers.value = current_user_info.value['followers'].length;
-           
-        }).catch((error) => {
-            console.log(error)
-        });       
+        })
+        return response.json()
     }
 </script>
 
@@ -129,7 +121,6 @@
                     <p class="stats-label">Followers</p>
                 </div>
             </div>
-            {{ following_flag }}
             <div v-if="following_flag" class="btn btn-register" id="follow-btn">Following</div>
             <div v-else class="btn btn-login" id="follow-btn">Follow</div>
         </div>

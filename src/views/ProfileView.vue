@@ -17,7 +17,6 @@
 
     let dataLoaded = ref(false);
 
-
     onMounted(async () => {
         let token = await getCsrfToken();
         csrf_token.value = token.csrf_token;
