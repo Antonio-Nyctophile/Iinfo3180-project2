@@ -342,11 +342,6 @@ def generate_token(uid):
     token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
     return token
 
-
-@app.route("/api/v1/images/<path:filename>")
-def getImage(filename):
-    return send_from_directory(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER']), filename)
-
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.execute(db.select(User).filter_by(id=user_id)).scalar()
