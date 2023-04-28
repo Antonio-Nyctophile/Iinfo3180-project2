@@ -44,7 +44,7 @@ def requires_auth(f):
         payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
 
     except jwt.ExpiredSignatureError:
-        return jsonify({'code': 'token_expired', 'description': 'token is expired'}), 401
+        return jsonify({'code': 'token_expired', 'description': 'Token is expired'}), 401
     except jwt.DecodeError:
         return jsonify({'code': 'token_invalid_signature', 'description': 'Token signature is invalid'}), 401
 
@@ -121,7 +121,7 @@ def login():
     
 # User Logout
 @app.route('/api/v1/auth/logout', methods=['POST'])
-# @login_required
+@login_required
 def logout():
     """Logout an existing user"""
     logout_user()
@@ -140,6 +140,7 @@ def get_user_details(user_id):
     user_posts = db.session.execute(db.select(Post).filter_by(user_id=int(user_id))).scalars()
     user_followers = db.session.execute(db.select(Follow).filter_by(user_id=int(user_id))).scalars()
     posts = []
+    followers = []
     for post in user_posts:
         posts.append({
             "id": post.id,
@@ -147,6 +148,12 @@ def get_user_details(user_id):
             "photo": f"/api/v1/uploads/{post.photo}",
             "description": post.caption,
             "created_on": post.created_on,
+        })
+    for follower in user_followers:
+        followers.append({
+            "id": follower.id,
+            "follower_id": follower.follower_id,
+            "user_id": follower.user_id,
         })
     return jsonify({
         "id": user_details.id,
@@ -157,15 +164,15 @@ def get_user_details(user_id):
         "location": user_details.location,
         "biography": user_details.biography,
         "profile_photo": f"/api/v1/uploads/{user_details.profile_photo}",
-        "joined_on": user_details.joined_on,
+        "joined_on": user_details.joined_on.strftime("%B, %Y"),
         "posts": posts,
-        "followers": len([follower for follower in user_followers])
+        "followers": followers
     }), 200
 #------------------------------ POSTS ----------------------------------------------#
 #View User Posts
 @app.route('/api/v1/users/<user_id>/posts', methods=['GET'])
 @login_required
-# @requires_auth
+@requires_auth
 def get_posts(user_id):
     """Get a list of all posts by a specific user."""
     user_posts = db.session.execute(db.select(Post).filter_by(user_id=user_id)).scalars()
@@ -242,6 +249,7 @@ def get_num_followers(user_id):
 #View all Posts by all Users 
 @app.route('/api/v1/posts', methods=['GET'])
 @login_required
+@requires_auth
 def get_all_posts():
     """View all posts by all registered users in the system."""
     posts = db.session.execute(db.select(Post)).scalars()
@@ -249,14 +257,21 @@ def get_all_posts():
     all_posts = []
     for post in posts:
         likes = db.session.execute(db.select(Like).filter_by(post_id=post.id)).scalars()
+        likes_lst = []
+        for like in likes:
+            likes_lst.append({
+                "id": like.id,
+                "post_id": like.post_id,
+                "user_id": like.user_id,
+            })
         user = User.query.get(post.user_id)
         all_posts.append({
             "id": post.id,
             "user_id": post.user_id,
             "photo": f"/api/v1/uploads/{post.photo}",
             "caption": post.caption,
-            "created_on": post.created_on,
-            "likes": len([like for like in likes]),
+            "created_on": post.created_on.strftime("%d %b %Y"),
+            "likes": likes_lst,
             "username": user.username
         })
     return jsonify(all_posts), 200
@@ -277,7 +292,7 @@ def like(post_id):
             db.session.add(like)
             db.session.commit()
             return jsonify({
-                "message": "Post liked!",
+                "message": "You liked this post!",
                 "likes": len([like for like in likes]) + 1
             }), 201
 
@@ -327,23 +342,18 @@ def generate_token(uid):
     token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
     return token
 
+
 @app.route("/api/v1/images/<path:filename>")
 def getImage(filename):
     return send_from_directory(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER']), filename)
-
 
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.execute(db.select(User).filter_by(id=user_id)).scalar()
 
-
 @app.route('/api/v1/csrf-token', methods=['GET'])
 def get_csrf():
     return jsonify({'csrf_token': generate_csrf()})
-
-# @app.route('/api/v1/current-user', methods=['GET'])
-# def get_current_user():
-#     return jsonify({'current_user':current_user.id})
 
 @app.route('/api/v1/jwt-token', methods=['GET'])
 def get_jwt_token():
@@ -359,3 +369,4 @@ def authenticated():
 @app.route('/api/v1/uploads/<filename>', methods=['GET'])
 def get_image(filename):
     return send_from_directory(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER']), filename)
+

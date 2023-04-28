@@ -1,77 +1,72 @@
 <script setup>
-    import { ref, onMounted } from "vue";
-     import { useRoute } from 'vue-router'
+    import { ref, onMounted, onUpdated } from "vue";
+    import { useRoute } from 'vue-router';
+    import { getCsrfToken, getUserId, getJWTToken } from "../assets/helper";
+
     const route = useRoute();
 
     let profile_id = ref("");
     profile_id.value = route.params.id;
 
-    onMounted(() => {
-        getCsrfToken();
-        getJWTToken();
-        getUserId();
+    let csrf_token = ref("");
+    let current_user_id = ref("");
+    let jwt_token = ref("");
+    let following_flag = ref(false);
 
+    let current_user_info = ref({});
+    let num_posts = ref("");
+    let num_followers = ref("");
+
+    let dataLoaded = ref(false);
+
+
+    onMounted(async () => {
+        let token = await getCsrfToken();
+        csrf_token.value = token.csrf_token;
+
+        let user_id = await getUserId();
+        current_user_id.value = user_id.id;
+
+        let jwt = await getJWTToken();
+        jwt_token.value = jwt.jwt_token;
+
+        loadProfileHeader()
+
+        dataLoaded.value = true;
+    })
+
+    onUpdated(() => {
         const followBtn = document.querySelector("#follow-btn");
         const alert = document.querySelector("#alert");
         followBtn.addEventListener('click', () => {
-            if(followBtn.classList.contains('btn-register')){
-                followBtn.classList.remove('btn-register')
-                followBtn.classList.add('btn-login')
-                followBtn.textContent = 'Follow'
-            } else{
-                followBtn.classList.remove('btn-login')
-                followBtn.classList.add('btn-register')
-                followBtn.textContent = 'Following'
+            if(!following_flag.value){
                 fetch(`/api/v1/users/${profile_id.value}/follow`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrf_token.value,
-                        Authorization: 'Bearer ' + jwt_token.value,
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrf_token.value,
+                    Authorization: 'Bearer ' + jwt_token.value,
+                }
+                }).then(function (response) {
+                    return {status: response.status, resp: response.json()};
+                }).then(async (data) => {
+                // display a success message
+                    if(data.status == 201){
+                        followBtn.classList.remove('btn-login')
+                        followBtn.classList.add('btn-register')
+                        followBtn.textContent = 'Following'
                     }
-                    }).then(function (response) {
-                        return response.json();
-                    }).then(function (data) {
-                    // display a success message
-                        console.log(data);
-                        alert.style.display = 'block'
-                        alert.textContent = data.message ? data.message : data.errors[0]
-                    }).catch(function (error) {
-                        console.log(error);
-                    });
+                    let response = await data.resp
+                    alert.style.display = 'block'
+                    alert.textContent = response.message ? response.message : response.errors[0]
+                }).catch(function (error) {
+                    console.log(error);
+                })
+            } else {
+                alert.style.display = 'block'
+                alert.textContent = "You are already following this user."
             }
         })
-    });
-
-    let current_user_id = ref("");
-    let jwt_token = ref("");
-    let csrf_token = ref("");
-    let current_user_info = ref({});
-    let num_posts = ref("");
-
-    function getCsrfToken(){
-        fetch('/api/v1/csrf-token')
-            .then((response) => response.json())
-            .then((data) => {
-                csrf_token.value = data.csrf_token;
-            })
-    }
-
-    let getUserId = () => {
-        fetch('/api/v1/authenticated')
-        .then((response) => response.json())
-        .then((data) => {
-            current_user_id.value = data.id;
-            loadProfileHeader()
-        })
-    }
-
-    let getJWTToken = () => {
-        fetch('/api/v1/jwt-token')
-        .then((response) => response.json())
-        .then((data) => {
-            jwt_token.value = data.jwt_token;
-        })
-    }
+    })
 
     let loadProfileHeader = () => {
         fetch(`/api/v1/users/${profile_id.value}`, {
@@ -80,22 +75,36 @@
                 'X-CSRFToken': csrf_token.value,
                 Authorization: 'Bearer ' + jwt_token.value,
             }
-        }).then(function (response) {
+        }).then((response) => {
             return response.json();
-        }).then(function (data) {
-            for(let d in data){
-                current_user_info.value[d] = data[d]
+        }).then((data) => {
+            for(let key in data){
+                current_user_info.value[key] = data[key]
             }
-            num_posts.value = current_user_info.value['posts'].length;
-        }).catch(function (error) {
 
-        });
+            for(let follower of current_user_info.value['followers']){
+                console.log(follower.follower_id)
+                console.log(current_user_id.value, 'd')
+                if(follower.follower_id === current_user_id.value){
+                    console.log('dd')
+                    following_flag.value = true;
+                } else {
+                    following_flag.value = false;
+                }
+            }
+
+            num_posts.value = current_user_info.value['posts'].length;
+            num_followers.value = current_user_info.value['followers'].length;
+           
+        }).catch((error) => {
+            console.log(error)
+        });       
     }
 </script>
 
 <template>
     <div class="alert" id="alert"></div>
-    <div class="photo-card profile-header">
+    <div v-if="dataLoaded" class="photo-card profile-header">
         <img :src="current_user_info['profile_photo']" alt="" class="profile-photo">
         
         <div class="profile-about">
@@ -116,12 +125,13 @@
                     <p class="stats-label">Posts</p>
                 </div>
                 <div class="followers">
-                    <p class="num-followers stats-count">{{ current_user_info['followers'] }}</p>
+                    <p class="num-followers stats-count">{{ num_followers }}</p>
                     <p class="stats-label">Followers</p>
                 </div>
             </div>
-
-            <div class="btn btn-login" id="follow-btn">Follow</div>
+            {{ following_flag }}
+            <div v-if="following_flag" class="btn btn-register" id="follow-btn">Following</div>
+            <div v-else class="btn btn-login" id="follow-btn">Follow</div>
         </div>
     </div>
 </template>

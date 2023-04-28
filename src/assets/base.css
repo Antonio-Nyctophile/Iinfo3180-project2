@@ -329,6 +329,7 @@ main{
 
 .explore-date{
     margin-right: 20px;
+    font-weight: bold;
 }
 
 .explore-btn{
@@ -458,4 +459,34 @@ main{
 .like-post-btn:hover{
     color: #d22020;
     cursor: pointer;
+}
+
+.liked{
+    color: #d22020;
+}
+
+.logged-in-icon{
+    text-align: center;
+    margin: 0 auto;
+    font-size: 200px;
+}
+
+.logged-in-text{
+    color: var(--clr-gray);
+    font-size: 30px;
+    text-align: center;
+    padding-top: 20px;
+}
+
+.logout-link{
+    color: var(--clr-secondary);
+    transition: all 0.5s ease-in-out;
+    -webkit-transition: all 0.5s ease-in-out;
+    -moz-transition: all 0.5s ease-in-out;
+    -ms-transition: all 0.5s ease-in-out;
+    -o-transition: all 0.5s ease-in-out;
+}
+
+.logout-link:hover{
+    color: var(--clr-accent)
 }

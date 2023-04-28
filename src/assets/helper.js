@@ -1,24 +1,21 @@
-let getCsrfToken = (csrf_ref) => {
-    fetch('/api/v1/csrf-token')
-        .then((response) => response.json())
-        .then((data) => {
-            csrf_ref.value = data.csrf_token;
-        })
+export const name = "helper";
+
+let callAPI = async (url_endpoint) => {
+    const response = await fetch(url_endpoint);
+    return response.json();
 }
 
-
-let getUserId = (curr_ref) => {
-    fetch('/api/v1/authenticated')
-    .then((response) => response.json())
-    .then((data) => {
-        curr_ref.value = data.current_user_id;
-    })
+export let getCsrfToken = async () => {
+    let csrf = await callAPI('/api/v1/csrf-token');
+    return csrf
 }
 
-let getJWTToken = (jwt_ref) => {
-    fetch('/api/v1/jwt-token')
-    .then((response) => response.json())
-    .then((data) => {
-        jwt_ref.value = data.jwt_token;
-    })
+export let getUserId = async () => {
+    let curr_ref = await callAPI('/api/v1/authenticated');
+    return curr_ref
+}
+
+export let getJWTToken = async () => {
+    let jwt_ref = await callAPI('/api/v1/jwt-token');
+    return jwt_ref
 }

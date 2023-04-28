@@ -1,42 +1,33 @@
 <script setup>
     import { ref, onMounted } from "vue";
     import router from "../router/index";
-
-    onMounted(() => {
-        getCsrfToken();
-        getUserId();
-        getJWTToken();
-    });
+    import {getCsrfToken, getUserId, getJWTToken} from "../assets/helper";
 
     let csrf_token = ref("");
     let current_user_id = ref("");
     let jwt_token = ref("");
 
-    function getCsrfToken(){
-        fetch('/api/v1/csrf-token')
-            .then((response) => response.json())
-            .then((data) => {
-                csrf_token.value = data.csrf_token;
-            })
-    }
-    let getUserId = () => {
-        fetch('/api/v1/authenticated')
-        .then((response) => response.json())
-        .then((data) => {
-            current_user_id.value = data.current_user_id;
-        })
-    }
-    let getJWTToken = () => {
-        fetch('/api/v1/jwt-token')
-        .then((response) => response.json())
-        .then((data) => {
-            jwt_token.value = data.jwt_token;
-        })
-    }
+    let dataLoaded = ref(false);
+
+    onMounted(async () => {
+        let token = await getCsrfToken();
+        csrf_token.value = token.csrf_token;
+
+        let user_id = await getUserId();
+        current_user_id.value = user_id.id;
+
+        let jwt = await getJWTToken();
+        jwt_token.value = jwt.jwt_token;
+
+        dataLoaded.value = true;       
+    });
+
 
     let makePost = () => {
         let postForm = document.querySelector('#postForm');
         let form_data = new FormData(postForm);
+        const alert = document.querySelector("#alert");
+
         fetch(`/api/v1/users/${current_user_id.value}/posts`, {
             method: 'POST',
             body: form_data,
@@ -48,8 +39,10 @@
             return response.json();
         }).then(function (data) {
         // display a success message
-            router.push('/explore');
             console.log(data);
+            alert.style.display = 'block'
+            alert.textContent = data.message ? data.message : data.errors[0]
+            router.push('/explore');
         }).catch(function (error) {
             console.log(error);
         });
@@ -57,7 +50,8 @@
 </script>
 
 <template>
-    <form @submit.prevent="makePost" enctype="multipart/form-data" id="postForm">
+    <div class="alert" id="alert"></div>
+    <form v-if="dataLoaded" @submit.prevent="makePost" enctype="multipart/form-data" id="postForm">
             <div class="form-group">
                 <label for="photo">Photo</label>
                 <input type="file" name="photo" class="formcontrol" accept="image/*">

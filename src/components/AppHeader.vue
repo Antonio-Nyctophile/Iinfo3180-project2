@@ -1,76 +1,45 @@
 <script setup>
 import { RouterLink } from "vue-router";
-import { ref, onMounted, onUnmounted, onUpdated } from "vue";
+import { ref, onMounted, onUpdated } from "vue";
 import router from "../router/index";
+import {getCsrfToken, getUserId} from "../assets/helper";
 
-
+let csrf_token = ref("");
 let logged_in = ref("");
 let current_user_id = ref("");
 
-onMounted(() => {
-  isLoggedIn();
-  getCsrfToken();
-  getUserId();
+let dataLoaded = ref(false);
+
+onMounted(async () => {
+  let token = await getCsrfToken();
+  csrf_token.value = token.csrf_token;
+
+  let user_id = await getUserId();
+  current_user_id.value = user_id.id;
+  logged_in.value = user_id.logged_in
+  
+  dataLoaded.value = true;
 })
 
-let csrf_token = ref("");
-
-
-function getCsrfToken(){
-        fetch('/api/v1/csrf-token')
-            .then((response) => response.json())
-            .then((data) => {
-                csrf_token.value = data.csrf_token;
-            })
-}
-
-let getUserId = () => {
-        fetch('/api/v1/authenticated')
-        .then((response) => response.json())
-        .then((data) => {
-            current_user_id.value = data.id;
-        })
-    }
 onUpdated(() => {
-  isLoggedIn()
+  const alert = document.querySelector("#alert");
 
-  if(logged_in.value === true){
+  if(logged_in.value){
     const logoutBtn = document.querySelector("#logout-btn");
     logoutBtn.addEventListener('click', () => {
-      fetch('/api/v1/auth/logout', {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': csrf_token.value
-        }
-      }).then((response) => {
-        return response.json
-      }).then((data) => {
-        console.log(data)
-      }).catch((error) => {
-        console.log(error)
-      })
-  
+      router.push('/logout')
     })
   } else {
     const loginBtn = document.querySelector("#login-btn");
     loginBtn.addEventListener('click', () => {
       router.push('/login')
     })
- 
   }
 })
-
-const isLoggedIn = () => {
-  fetch('/api/v1/authenticated')
-  .then((response) => response.json())
-  .then((data) => {
-    logged_in.value = data.logged_in
-  })
-}
 </script>
 
 <template>
-  <header>
+  <header v-if="dataLoaded">
       <nav>
         <ul>
             <div class="logo">
@@ -98,5 +67,6 @@ const isLoggedIn = () => {
         </ul>
       </nav>
   </header>
+  <div class="alert" id="alert"></div>
 </template>
 

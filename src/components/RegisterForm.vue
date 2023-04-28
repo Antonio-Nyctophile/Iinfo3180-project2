@@ -1,24 +1,23 @@
 <script setup>
     import { ref, onMounted } from "vue";
     import router from "../router/index";
-
-    onMounted(() => {
-        getCsrfToken();
-    });
+    import { getCsrfToken } from "../assets/helper";
 
     let csrf_token = ref("");
 
-    function getCsrfToken(){
-        fetch('/api/v1/csrf-token')
-            .then((response) => response.json())
-            .then((data) => {
-                csrf_token.value = data.csrf_token;
-            })
-    }
+    let dataLoaded = ref(false);
+
+    onMounted(async () => {
+        let token = await getCsrfToken();
+        csrf_token.value = token.csrf_token;
+
+        dataLoaded.value = true;
+    });
     
     let saveUser = () => {
         let registerForm = document.querySelector('#registerForm');
         let form_data = new FormData(registerForm);
+        const alert = document.querySelector("#alert");
 
         fetch('/api/v1/register', {
             method: 'POST',
@@ -30,8 +29,10 @@
             return response.json();
         }).then(function (data) {
         // display a success message
-            router.push('/explore');
             console.log(data);
+            alert.style.display = 'block'
+            alert.textContent = data.message ? data.message : data.errors[0]
+            router.push('/explore');
         }).catch(function (error) {
             console.log(error);
         });
@@ -39,7 +40,8 @@
 </script>
 
 <template>
-    <form @submit.prevent="saveUser" enctype="multipart/form-data" id="registerForm">
+    <div class="alert" id="alert"></div>
+    <form v-if="dataLoaded" @submit.prevent="saveUser" enctype="multipart/form-data" id="registerForm">
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" name="username" class="formcontrol">

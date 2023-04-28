@@ -1,22 +1,20 @@
 <script setup>
     import { ref, onMounted } from "vue";
     import router from "../router/index";
-
-    onMounted(() => {
-        getCsrfToken();
-    });
+    import {getCsrfToken} from "../assets/helper";
 
     let csrf_token = ref("");
 
+    let dataLoaded = ref(false);
+
+    onMounted(async () => {
+        let token = await getCsrfToken();
+        csrf_token.value = token.csrf_token;
+
+        dataLoaded.value = true;
+    });
 
 
-    function getCsrfToken(){
-        fetch('/api/v1/csrf-token')
-            .then((response) => response.json())
-            .then((data) => {
-                csrf_token.value = data.csrf_token;
-            })
-    }
     let loginUser = () => {
         const alert = document.querySelector("#alert");
 
@@ -32,18 +30,19 @@
             return response.json();
         }).then(function (data) {
         // display a success message
-            router.push('/explore');
             console.log(data);
             alert.style.display = 'block'
-            alert.textContent = data.errors[0]
+            alert.textContent = data.message ? data.message : data.errors[0]
+            router.push('/explore');
         }).catch(function (error) {
+            console.log(error)
         });
     }
 </script>
 
 <template>
     <div class="alert" id="alert"></div>
-    <form @submit.prevent="loginUser" enctype="multipart/form-data" id="loginForm">
+    <form v-if="dataLoaded" @submit.prevent="loginUser" enctype="multipart/form-data" id="loginForm">
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" name="username" class="formcontrol">
